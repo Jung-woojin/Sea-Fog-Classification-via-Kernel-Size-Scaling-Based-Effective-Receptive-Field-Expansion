@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-# models_erf.py — ERF 실험용 backbone 정의
-# 위치: /home/wj/seafog/src/models_erf.py
 
 import torch
 import torch.nn as nn
