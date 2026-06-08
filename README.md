@@ -9,9 +9,11 @@
 
 This project investigates how **Kernel Size Scaling (KSS)**-based ERF expansion affects sea fog classification performance in maritime CCTV environments. Rather than proposing a new SOTA architecture, this work analyzes the **relationship between ERF expansion and classification accuracy** across multiple CNN backbones and port environments.
 
+
 ### 🔍 Problem Statement
 
 CNN models with limited ERF exhibit **local texture bias** — over-responding to local noise, haze, and edge components visually similar to sea fog. This causes misclassification between normal visibility, low visibility, and sea fog conditions.
+
 
 ### 💡 Approach
 
