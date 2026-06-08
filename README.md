@@ -1,7 +1,5 @@
 # 🌊 Sea Fog Classification via Kernel Size Scaling-Based Effective Receptive Field Expansion
 
-**Enhancing Sea Fog Recognition through Adaptive Receptive Field Dynamics**
-
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-1.8%2B-EE4C2C?logo=pytorch)](https://pytorch.org/)
 
@@ -9,111 +7,105 @@
 
 ## 📋 Overview
 
-This project presents a novel approach to **sea fog classification** using **Kernel Size Scaling (KSS)** to expand the effective receptive field (ERF) of convolutional neural networks. The work was developed for an academic conference presentation and focuses on improving fog recognition accuracy in marine environments.
+This project investigates how **Kernel Size Scaling (KSS)**-based ERF expansion affects sea fog classification performance in maritime CCTV environments. Rather than proposing a new SOTA architecture, this work analyzes the **relationship between ERF expansion and classification accuracy** across multiple CNN backbones and port environments.
 
 ### 🔍 Problem Statement
 
-Sea fog significantly impacts maritime navigation, coastal communities, and weather forecasting. Traditional computer vision approaches often struggle with:
-- Limited receptive fields failing to capture contextual information
-- Difficulty distinguishing between fog, low visibility, and normal conditions
-- Sensitivity to varying atmospheric conditions
+CNN models with limited ERF exhibit **local texture bias** — over-responding to local noise, haze, and edge components visually similar to sea fog. This causes misclassification between normal visibility, low visibility, and sea fog conditions.
 
-### 💡 Our Solution
+### 💡 Approach
 
-We introduce **Kernel Size Scaling**, a technique that dynamically expands the effective receptive field through:
-- **Type A**: Progressive kernel size enlargement (3 → 7 → 11 → 15)
-- **Type B**: Dual-branch architecture with parallel base and extended kernels
+We investigate two ERF expansion strategies applied to depthwise convolutions:
+
+- **Type A**: Replace existing DWConv kernel with larger K×K kernel (K ∈ {3, 7, 11, 15})
+- **Type B**: Add a large-kernel branch in parallel to the original DWConv (K ∈ {7, 15}), following RepLKNet-style design
+
+Both are evaluated across 4 CNN backbones and 2 port environments.
 
 ---
 
 ## 🏆 Results
 
-### Classification Performance
+### Yeosu Port
 
-Our approach achieves state-of-the-art results in sea fog classification:
+| Model | Macro Precision | Macro Recall | Macro F1 | Params(M) | ΔF1 |
+|-------|----------------|--------------|----------|-----------|-----|
+| ConvNeXt TypeA_3 (baseline) | 0.819 | 0.727 | 0.688 | 86.85 | — |
+| ConvNeXt TypeA_11 | 0.854 | 0.773 | **0.754** | 88.87 | **+0.066** |
+| EfficientNet V2 Base (baseline) | 0.827 | 0.738 | 0.712 | 52.86 | — |
+| EfficientNet V2 TypeB_7 | 0.815 | 0.759 | **0.748** | 56.15 | **+0.036** |
+| MobileNet V3 Base (baseline) | 0.837 | 0.724 | 0.695 | 4.21 | — |
+| MobileNet V3 TypeA_11 | 0.857 | 0.829 | **0.833** | 4.72 | **+0.138 ★** |
+| Xception Base (baseline) | 0.836 | 0.737 | 0.706 | 20.81 | — |
+| Xception TypeB_15 | 0.814 | 0.758 | **0.745** | 25.79 | **+0.039** |
+| Swin-T (ImageNet-100) | 0.651 | 0.647 | 0.640 | 86.75 | ref |
+| Swin-T (ImageNet-22k) | 0.780 | 0.688 | 0.651 | 86.75 | ref |
 
-| Metric | Value |
-|--------|-------|
-| **Overall Accuracy** | ⬆️ Improved over baseline |
-| **Fog Detection** | 🔍 Enhanced sensitivity |
-| **Low Visibility** | 👁️ Better discrimination |
-| **Normal Conditions** | ✅ Reliable classification |
+→ **4/4 backbones improved**, average ΔMacro F1 = **+0.070**
 
 ---
 
-## 🚀 Key Features
+### Haeundae Port
 
-### 🧠 Multiple Backbone Architectures
+| Model | Macro Precision | Macro Recall | Macro F1 | Params(M) | ΔF1 |
+|-------|----------------|--------------|----------|-----------|-----|
+| ConvNeXt TypeA_3 (baseline) | 0.746 | 0.728 | 0.707 | 86.85 | — |
+| ConvNeXt Base | 0.791 | 0.780 | **0.774** | 87.57 | **+0.067 ★** |
+| EfficientNet V2 Base (baseline) | 0.744 | 0.723 | 0.698 | 52.86 | — |
+| EfficientNet V2 TypeA_7 | 0.746 | 0.730 | **0.716** | 55.46 | **+0.018** |
+| MobileNet V3 Base (baseline) | 0.745 | 0.722 | 0.690 | 4.21 | — |
+| MobileNet V3 TypeA_15 | 0.763 | 0.730 | **0.712** | 5.24 | **+0.022** |
+| Xception Base (baseline) | 0.688 | 0.670 | 0.624 | 20.81 | — |
+| Xception TypeB_7 | 0.770 | 0.758 | **0.748** | 21.99 | **+0.124 ★** |
+| Swin-T (ImageNet-100) | 0.655 | 0.538 | 0.517 | 86.75 | ref |
+| Swin-T (ImageNet-22k) | 0.767 | 0.734 | 0.713 | 86.75 | ref |
 
-Support for diverse CNN backbones with ERF expansion:
+→ **4/4 backbones improved**, average ΔMacro F1 = **+0.058**
 
-- **ConvNeXt** - Large-kernel modern CNN (base kernel: 7)
-- **EfficientNet** - Compound scaling efficiency (base kernel: 3)
-- **Xception** - Depthwise separable convolutions (base kernel: 3)
-- **MobileNet** - Lightweight mobile-friendly (base kernel: 3)
+---
 
-### 🎯 Three-Class Classification
+### Key Findings
 
-Distinguish between:
-1. **Normal** (Clear visibility)
-2. **Low Visibility** (Reduced visibility conditions)
-3. **Sea Fog** (Fog presence detected)
+**1. ERF expansion consistently improves performance**
+- 8/8 cases improved across both ports (best-mode comparison)
+- Maximum gain: MobileNet V3 TypeA_11 at Yeosu (+0.138 Macro F1)
 
-### 🔬 Advanced Analysis Tools
+**2. Bidirectional validation via ConvNeXt**
+- ConvNeXt already uses 7×7 DWConv (inherently large ERF)
+- Reducing kernel to 3×3 (TypeA_3) degrades performance: −0.067 at Haeundae
+- This confirms ERF expansion as the causal factor, not mere architecture change
 
-Integrated Grad-CAM visualization for interpretability:
-- Model attention heatmap generation
-- Visual comparison between baseline and ERF-expanded models
-- Class-specific attention analysis
+**3. Backbone-specific optimal design**
+- Optimal mode varies per backbone and port environment
+- No single configuration dominates across all settings
+
+**4. Swin-T comparison**
+- Swin-T (ImageNet-100): underperforms all CNN baselines
+- Swin-T (ImageNet-22k): competitive, but CNN + ERF expansion achieves higher F1 at lower params (MobileNet: 4.72M vs 86.75M)
+
+---
+
+## 🧠 Backbone Architectures
+
+| Backbone | Base DW Kernel | Activation | Notes |
+|----------|---------------|------------|-------|
+| ConvNeXt | 7×7 | GELU | Already ERF-expanded design |
+| EfficientNetV2-M | 3×3 | SiLU | Fused-MBConv (early) + MBConv (late) |
+| MobileNetV3 | 3×3 / 5×5 | h-swish | Mixed kernel, SE blocks |
+| Xception | 3×3 | ReLU | Depthwise separable |
 
 ---
 
 ## 📁 Repository Structure
 
 ```
-Sea-Fog-Classification-via-Kernel-Size-Scaling-Based-Effective-Receptive-Field-Expansion/
-├── README.md                    # This file
-├── models_erf.py               # ERF model architecture & builders
-├── gradcam_erf_models.py       # Grad-CAM visualization toolkit
-├── pretrain.py                 # ImageNet-100 pretraining script
-├── pretrain_vit.py             # Vision Transformer pretraining
-├── summary_erf.csv             # Experiment summary results
-├── Sea Fog Classification via...pdf  # Academic presentation
-└── results/                    # Trained models & analysis outputs
+├── models_erf.py                # ERF model architecture & builders
+├── gradcam_erf_models.py        # Grad-CAM visualization toolkit
+├── pretrain.py                  # ImageNet-100 pretraining script
+├── erf_analysis_true.py         # True ERF measurement (Luo et al., 2016)
+├── summary_erf.csv              # Full experiment results
+└── results/                     # Trained models & analysis outputs
 ```
-
-### Core Components
-
-#### `models_erf.py`
-- **Experimental Configurations**: 28 unique experiment setups
-- **Dynamic Kernel Replacement**: Runtime kernel size adaptation
-- **Branch Architecture**: Parallel base + extended kernel processing
-- **Pretrained Loading**: Flexible checkpoint handling
-
-#### `gradcam_erf_models.py`
-- **Grad-CAM Engine**: Safe, generic gradient-based visualization
-- **Multi-Port Analysis**: Daesan, Yeosu, Haeundae regions
-- **Comparison Grids**: Side-by-side model visualization
-- **Prediction Summaries**: Statistical analysis of results
-
-#### `pretrain.py`
-- **ImageNet-100 Pretraining**: 90-epoch training pipeline
-- **Mixed Precision**: AMP acceleration
-- **Robust Logging**: JSON experiment tracking
-- **Auto-Resume**: Skip-completion detection
-
----
-
-## 🎓 Academic Contribution
-
-This work introduces a novel receptive field expansion technique specifically tailored for maritime fog detection, with:
-
-1. **Theoretical Innovation**: Kernel Size Scaling for ERF optimization
-2. **Practical Application**: Real-world sea fog classification
-3. **Interpretability**: Grad-CAM analysis for model transparency
-4. **Comprehensive Evaluation**: Multiple architectures and configurations
-
-📄 **View the full academic presentation**: [Sea Fog Classification PDF](Sea%20Fog%20Classification%20via%20Kernel%20Size%20Scaling-Based%20Effective%20Receptive%20Field%20Expansion.pdf)
 
 ---
 
@@ -124,36 +116,44 @@ This work introduces a novel receptive field expansion technique specifically ta
 ```python
 from models_erf import build_erf_model, load_pretrained_for_finetune
 
-# Build base model
-model = build_erf_model("convnext", "base", num_classes=3, pretrained=True)
+# Base model
+model = build_erf_model("mobilenet", "base", num_classes=3)
 
-# Build Type A (kernel size 11)
-model = build_erf_model("convnext", "typeA_11", num_classes=3, pretrained=True)
+# Type A (kernel replacement)
+model = build_erf_model("mobilenet", "typeA_11", num_classes=3)
 
-# Build Type B (branch with base=7, extended=15)
-model = build_erf_model("convnext", "typeB_15", num_classes=3, pretrained=True)
+# Type B (branch addition)
+model = build_erf_model("xception", "typeB_7", num_classes=3)
 
-# Load pre-trained checkpoint for fine-tuning
+# Load pretrained checkpoint for fine-tuning
 model = load_pretrained_for_finetune(
-    backbone="convnext",
+    backbone="mobilenet",
     mode="typeA_11",
-    pretrain_ckpt="/path/to/pretrain_ckpt/convnext_typeA_11/best.pth",
+    pretrain_ckpt="/path/to/pretrain_ckpt/mobilenet_typeA_11/best.pth",
     num_classes=3
 )
 ```
 
-### Running Pretraining
+### Pretraining
 
 ```bash
 python pretrain.py \
-    --backbone convnext \
+    --backbone mobilenet \
     --mode typeA_11 \
     --data_dir /path/to/imagenet100 \
     --save_dir /path/to/save_ckpt \
     --epochs 90 \
-    --batch_size 512 \
-    --lr 1e-3 \
-    --seed 42
+    --batch_size 256 \
+    --lr 1e-3
+```
+
+### True ERF Measurement
+
+```bash
+python erf_analysis_true.py \
+    --step all \
+    --port yeosu \
+    --n_samples 50
 ```
 
 ### Grad-CAM Visualization
@@ -161,160 +161,46 @@ python pretrain.py \
 ```bash
 python gradcam_erf_models.py \
     --step all \
-    --port daesan \
     --port yeosu \
     --port haeundae \
-    --img_size 512 \
-    --num_per_class 50 \
-    --viz_per_class 5 \
-    --target pred
+    --num_per_class 50
 ```
 
 ---
 
-## 📊 Experiment Overview
+## 📊 Experimental Configuration
 
-### Total Experimental Configurations: 28
-
-**Base Models (4)**
-- ConvNeXt, EfficientNet, Xception, MobileNet
-
-**Type A Expansions (16)**
-- For each backbone: kernel sizes [3, 7, 11, 15]
-
-**Type B Expansions (8)**
-- For each backbone: dual-branch with kernels [7, 15]
-
----
-
-## 🎨 Visual Results
-
-### Grad-CAM Comparison
-
-The Grad-CAM visualization tool generates:
-- **Step 1**: Sample selection manifests
-- **Step 2**: Grad-CAM heatmaps for all configurations
-- **Step 3**: Comparison grids showing baseline vs. ERF-expanded models
-- **Summary**: Statistical prediction analysis
-
-![Grad-CAM Example](results/gradcam_erf_models/step3_comparison_grids/*/convnext/base_vs_typeA/normal.png)
+| Category | Detail |
+|----------|--------|
+| Backbones | ConvNeXt, EfficientNetV2-M, MobileNetV3, Xception |
+| ERF modes | base, typeA_{3,7,11,15}, typeB_{7,15} |
+| Total configs | 28 |
+| Pretraining data | ImageNet-100 (130,000 train / 5,000 val) |
+| Fine-tuning data | KHOA CCTV — Yeosu, Haeundae |
+| Train/Val/Test split | 6,300 / 900 / 1,800 (temporal split: 2018~2022 / 2023~2024) |
+| Input size | 512×512 (fine-tuning), 224×224 (pretraining) |
+| Primary metric | Macro-F1 |
+| GPU | NVIDIA H200 |
 
 ---
 
-## 📈 Performance Insights
+## 🔬 ERF Measurement
 
-### Kernel Size Scaling Benefits
+True ERF is measured following **Luo et al. (2016)**:
 
-1. **Type A (Simple Expansion)**
-   - Larger kernels capture more context
-   - Improved fog texture recognition
-   - Gradual performance improvement with kernel size
+1. Feed random noise input (n=50 trials)
+2. Target: last spatial feature map center unit
+3. Compute input gradient → average over trials
+4. Measure **Weighted Spatial Spread (σ)**:
 
-2. **Type B (Branch Architecture)**
-   - Multi-scale feature extraction
-   - Preserves base receptive field
-   - Additional extended branch for global context
+$$\sigma = \sqrt{\sum_{i,j} \tilde{G}(i,j) \cdot d(i,j)^2}$$
 
-### Architecture-Specific Behavior
-
-- **ConvNeXt**: Already optimized for large kernels; shows consistent improvement
-- **EfficientNet**: Benefits from Type B dual-branch approach
-- **MobileNet**: Lightweight with surprising ERF expansion gains
-- **Xception**: Strong performance with Type B at k=7
+This approach is data-independent and measures the structural ERF of the model itself.
 
 ---
 
-## 📋 Data Requirements
-
-### ImageNet-100 Pretraining
-- Format: Kaggle ImageNet-100 dataset
-- Structure: `train.X*` and `val.X` folders with class subdirectories
-- Resolution: 224×224 (resized from original)
-
-### Sea Fog Classification Data
-- Regions: Daesan, Yeosu, Haeundae
-- Labels: Normal, Low Visibility, Sea Fog
-- Format: CSV with image paths and class labels
-
----
-
-## 🔬 Technical Details
-
-### Effective Receptive Field (ERF)
-
-The effective receptive field defines how much input information influences a single activation. Our KSS technique:
-
-1. **Monitors** existing depthwise convolutions
-2. **Identifies** kernel size for expansion
-3. **Expands** receptive field dynamically
-4. **Preserves** computational efficiency
-
-### Branch Architecture (Type B)
-
-```
-Input → [Base DW-Conv + Extended DW-Conv] → Addition → GELU → BN
-         └─────── k_base ───────┬─────── k_branch ───────┘
-```
-
-This allows the network to learn both local (base) and global (extended) features simultaneously.
-
----
-
-## 🎓 Citation
-
-If you use this work in your research, please cite:
-
-```bibtex
-@article{jung2026seafog,
-    title={Enhancing Sea Fog Recognition via Effective Receptive Field Expansion with Kernel Size Scaling},
-    author={Jung, Woojin},
-    journal={Academic Conference Presentation},
-    year={2026}
-}
-```
-
----
-
-## 🤝 Contributing
-
-This is an academic research project. Feel free to:
-- Report issues
-- Suggest improvements
-- Ask questions about the methodology
-
----
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-## 📊 Repository Statistics
-
-| Metric | Value |
-|--------|-------|
-| **Total Parameters** | ~50-100M per backbone |
-| **Classes** | 3 (Normal, Low Visibility, Sea Fog) |
-| **Input Size** | 512×512 (Grad-CAM), 224×224 (Training) |
-| **Backbones Tested** | 4 |
-| **Experimental Configs** | 28 |
-| **Regions Analyzed** | 3 (Daesan, Yeosu, Haeundae) |
-
----
 
 ## 🙏 Acknowledgments
 
-- Academic conference organizers
-- Research collaborators
-- Open source contributors (PyTorch, Timm, Torchvision)
-
----
-
-<div align="center">
-
-**🌊 Advancing Maritime Weather Recognition through Deep Learning**
-
-*Sea Fog Classification via Kernel Size Scaling-Based Effective Receptive Field Expansion*
-
-</div>
+- Korea Hydrographic and Oceanographic Agency (KHOA) for CCTV data
+- PyTorch, timm, mmdetection open source communities
