@@ -177,7 +177,7 @@ python gradcam_erf_models.py \
 | Total configs | 28 |
 | Pretraining data | ImageNet-100 (130,000 train / 5,000 val) |
 | Fine-tuning data | KHOA CCTV — Yeosu, Haeundae |
-| Train/Val/Test split | 6,300 / 900 / 1,800 (temporal split: 2018~2022 / 2023~2024) |
+| Train/Val/Test split | 6,300 / 900 / 1,800 (temporal split: 2018-2022 / 2023-2024) |
 | Input size | 512×512 (fine-tuning), 224×224 (pretraining) |
 | Primary metric | Macro-F1 |
 | GPU | NVIDIA H200 |
