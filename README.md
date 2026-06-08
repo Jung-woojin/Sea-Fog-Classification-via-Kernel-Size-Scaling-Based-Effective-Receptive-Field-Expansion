@@ -102,7 +102,7 @@ Both are evaluated across 4 CNN backbones and 2 port environments.
 ├── models_erf.py                # ERF model architecture & builders
 ├── gradcam_erf_models.py        # Grad-CAM visualization toolkit
 ├── pretrain.py                  # ImageNet-100 pretraining script
-├── erf_analysis_true.py         # True ERF measurement (Luo et al., 2016)
+├── erf_analysis.py              # ERF measurement (Luo et al., 2016)
 ├── summary_erf.csv              # Full experiment results
 └── results/                     # Trained models & analysis outputs
 ```
@@ -147,10 +147,10 @@ python pretrain.py \
     --lr 1e-3
 ```
 
-### True ERF Measurement
+### ERF Measurement
 
 ```bash
-python erf_analysis_true.py \
+python erf_analysis.py \
     --step all \
     --port yeosu \
     --n_samples 50
@@ -186,7 +186,7 @@ python gradcam_erf_models.py \
 
 ## 🔬 ERF Measurement
 
-True ERF is measured following **Luo et al. (2016)**:
+ERF is measured following **Luo et al. (2016)**:
 
 1. Feed random noise input (n=50 trials)
 2. Target: last spatial feature map center unit
