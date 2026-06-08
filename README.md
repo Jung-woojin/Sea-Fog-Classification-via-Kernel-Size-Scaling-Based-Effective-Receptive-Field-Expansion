@@ -112,21 +112,21 @@ Both are evaluated across 4 CNN backbones and 2 port environments.
 ---
 
 ## 🛠️ Usage
-
+ 
 ### Model Building
-
+ 
 ```python
 from models_erf import build_erf_model, load_pretrained_for_finetune
-
+ 
 # Base model
 model = build_erf_model("mobilenet", "base", num_classes=3)
-
+ 
 # Type A (kernel replacement)
 model = build_erf_model("mobilenet", "typeA_11", num_classes=3)
-
+ 
 # Type B (branch addition)
 model = build_erf_model("xception", "typeB_7", num_classes=3)
-
+ 
 # Load pretrained checkpoint for fine-tuning
 model = load_pretrained_for_finetune(
     backbone="mobilenet",
@@ -135,40 +135,119 @@ model = load_pretrained_for_finetune(
     num_classes=3
 )
 ```
-
-### Pretraining
-
+ 
+### Pretraining (CNN)
+ 
 ```bash
+# Single backbone/mode
 python pretrain.py \
     --backbone mobilenet \
     --mode typeA_11 \
     --data_dir /path/to/imagenet100 \
-    --save_dir /path/to/save_ckpt \
+    --save_dir /path/to/pretrain_ckpt \
     --epochs 90 \
     --batch_size 256 \
     --lr 1e-3
+ 
+# All backbones/modes sequentially (GPU 0)
+bash run_pretrain.sh
 ```
-
+ 
+### Pretraining (Swin-T)
+ 
+```bash
+# From scratch with ImageNet-100
+python pretrain_vit.py \
+    --backbone swin \
+    --data_dir /path/to/imagenet100 \
+    --save_dir /path/to/pretrain_ckpt \
+    --epochs 90 \
+    --batch_size 256
+```
+ 
+### Fine-tuning (CNN)
+ 
+```bash
+# Single model
+CUDA_VISIBLE_DEVICES=1 python train_erf.py \
+    --backbone mobilenet \
+    --mode typeA_11 \
+    --port yeosu \
+    --data_csv /path/to/splits.csv \
+    --pretrain_ckpt /path/to/pretrain_ckpt/mobilenet_typeA_11/best.pth \
+    --output_root /path/to/results/erf \
+    --epochs 100 \
+    --batch_size 32 \
+    --img_size 512 \
+    --lr 1e-3 \
+    --patience 15
+ 
+# All models sequentially (GPU 1)
+bash run_finetune.sh
+```
+ 
+### Fine-tuning (Swin-T)
+ 
+```bash
+# With ImageNet-100 pretrained checkpoint
+CUDA_VISIBLE_DEVICES=1 python train_vit.py \
+    --backbone swin \
+    --port yeosu \
+    --data_csv /path/to/splits.csv \
+    --pretrain_ckpt /path/to/pretrain_ckpt/swin_base/best.pth \
+    --output_root /path/to/results/erf \
+    --epochs 100 \
+    --batch_size 32
+ 
+# With ImageNet-22k pretrained weight (timm)
+CUDA_VISIBLE_DEVICES=1 python train_vit.py \
+    --backbone swin \
+    --port yeosu \
+    --data_csv /path/to/splits.csv \
+    --pretrain_ckpt imagenet21k \
+    --output_root /path/to/results/erf \
+    --run_name swin_21k \
+    --epochs 100 \
+    --batch_size 32
+```
+ 
 ### ERF Measurement
-
+ 
 ```bash
-python erf_analysis.py \
-    --step all \
-    --port yeosu \
-    --n_samples 50
+# Step 1: ERF measurement per backbone
+python erf_analysis.py --step erf --port yeosu --num_per_class 50
+ 
+# Step 2: ERF vs misclassification correlation
+python erf_analysis.py --step correlation --port yeosu --num_per_class 100
+ 
+# Step 4: ERF change before/after expansion
+python erf_analysis.py --step delta --port yeosu --num_per_class 50
+ 
+# All steps at once
+python erf_analysis.py --step all --port yeosu --num_per_class 50
 ```
-
+ 
 ### Grad-CAM Visualization
-
+ 
 ```bash
-python gradcam_erf_models.py \
-    --step all \
-    --port yeosu \
+# Paper figures (correct predictions)
+CUDA_VISIBLE_DEVICES=1 python gradcam_paper.py \
+    --pair xception \
     --port haeundae \
-    --num_per_class 50
+    --num_images 30
+ 
+# Misclassification mining
+CUDA_VISIBLE_DEVICES=1 python gradcam_failure.py \
+    --pair xception \
+    --port haeundae \
+    --max_per_case 10
+ 
+# All pairs
+CUDA_VISIBLE_DEVICES=1 python gradcam_failure.py \
+    --pair all \
+    --port haeundae \
+    --max_per_case 10
 ```
-
----
 
 ## 📊 Experimental Configuration
 
